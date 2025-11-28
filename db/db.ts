@@ -11,7 +11,7 @@ import postgres from "postgres"
 import {
   questionItemsTable,
   papersTable,
-  paperQuestionItemsTable,
+  paperBlocksTable,
   answerArtifactsTable,
   answersTable,
   answerArtifactLinksTable,
@@ -23,7 +23,7 @@ config({ path: ".env.local" })
 const schema = {
   questionItems: questionItemsTable,
   papers: papersTable,
-  paperQuestionItems: paperQuestionItemsTable,
+  paperBlocks: paperBlocksTable,
   answerArtifacts: answerArtifactsTable,
   answers: answersTable,
   answerArtifactLinks: answerArtifactLinksTable,

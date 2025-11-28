@@ -225,4 +225,125 @@ Design tokens based on MathCraft design guidelines.
   .animate-scale-in {
     animation: scale-in var(--duration-base) var(--easing-decelerate);
   }
+
+  /* TipTap Editor Styles */
+  .ProseMirror {
+    @apply outline-none;
+  }
+
+  .ProseMirror > * + * {
+    margin-top: 0.75em;
+  }
+
+  .ProseMirror p.is-editor-empty:first-child::before {
+    @apply text-muted-foreground pointer-events-none float-left h-0;
+    content: attr(data-placeholder);
+  }
+
+  /* TipTap Selection */
+  .ProseMirror ::selection {
+    @apply bg-primary/20;
+  }
+
+  /* TipTap Horizontal Rule */
+  .ProseMirror hr {
+    @apply my-6 border-t-2 border-border;
+  }
+
+  /* TipTap Spacer Block */
+  .ProseMirror .spacer-block {
+    @apply my-2 w-full rounded border border-dashed border-muted-foreground/30 bg-muted/20;
+    transition: background-color var(--duration-fast) var(--easing-standard);
+  }
+
+  .ProseMirror .spacer-block:hover {
+    @apply bg-muted/40 border-muted-foreground/50;
+  }
+
+  .ProseMirror .spacer-block.ProseMirror-selectednode {
+    @apply bg-primary/10 border-primary/50;
+  }
+
+  /* TipTap Logo Block */
+  .ProseMirror .logo-block {
+    @apply my-4 py-2;
+  }
+
+  .ProseMirror .logo-block img {
+    @apply max-h-32 object-contain;
+  }
+
+  .ProseMirror .logo-block.ProseMirror-selectednode {
+    @apply ring-2 ring-primary/50 ring-offset-2 rounded;
+  }
+
+  /* TipTap Image Block */
+  .ProseMirror img {
+    @apply rounded-lg;
+    max-width: 100%;
+    height: auto;
+  }
+
+  .ProseMirror img.ProseMirror-selectednode {
+    @apply ring-2 ring-primary ring-offset-2;
+  }
+
+  /* TipTap Blockquote */
+  .ProseMirror blockquote {
+    @apply border-l-4 border-primary/40 pl-4 italic text-muted-foreground;
+  }
+
+  /* TipTap Code */
+  .ProseMirror code {
+    @apply rounded bg-muted px-1.5 py-0.5 font-mono text-sm;
+  }
+
+  .ProseMirror pre {
+    @apply rounded-lg bg-muted p-4 font-mono text-sm;
+  }
+
+  .ProseMirror pre code {
+    @apply bg-transparent p-0;
+  }
+
+  /* TipTap Lists */
+  .ProseMirror ul,
+  .ProseMirror ol {
+    @apply pl-6;
+  }
+
+  .ProseMirror ul {
+    @apply list-disc;
+  }
+
+  .ProseMirror ol {
+    @apply list-decimal;
+  }
+
+  .ProseMirror li {
+    @apply my-1;
+  }
+
+  /* TipTap Headings */
+  .ProseMirror h1 {
+    @apply text-3xl font-bold tracking-tight font-serif;
+  }
+
+  .ProseMirror h2 {
+    @apply text-2xl font-semibold tracking-tight font-serif;
+  }
+
+  .ProseMirror h3 {
+    @apply text-xl font-semibold tracking-tight font-serif;
+  }
+
+  /* TipTap Drop Cursor */
+  .ProseMirror-dropcursor {
+    @apply border-primary;
+  }
+
+  /* TipTap Gap Cursor */
+  .ProseMirror-gapcursor:after {
+    @apply border-t-2 border-primary;
+  }
 }

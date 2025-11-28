@@ -15,6 +15,13 @@
       "when": 1764312618814,
       "tag": "0001_rapid_gideon",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1764323151107,
+      "tag": "0002_smooth_serpent_society",
+      "breakpoints": true
     }
   ]
 }
