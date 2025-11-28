@@ -1,7 +1,8 @@
 /*
 <ai_context>
 Defines the question_items table for storing gradable question units.
-Supports metadata, content, rubric, and grading hints for AI evaluation.
+Supports metadata, TipTap content (content_doc), rendered snapshots (content_html, content_plain),
+rubric, and grading hints for AI evaluation.
 </ai_context>
 */
 
@@ -51,14 +52,26 @@ export const questionItemsTable = pgTable("question_items", {
     .notNull()
     .default([]),
 
-  // Content (simple for v0; blocks later)
-  context: text("context"), // optional stem/passage text
-  questionText: text("question_text").notNull(),
+  // TipTap Rich Content
+  contentDoc: jsonb("content_doc").notNull().default({}),
+  // Canonical TipTap document (question/part/diagram nodes)
+  contentHtml: text("content_html").notNull().default(""),
+  // Server-rendered HTML snapshot for fast rendering and AI payloads
+  contentPlain: text("content_plain").notNull().default(""),
+  // Stripped text for search and AI fallbacks
+  contentVersion: varchar("content_version", { length: 32 })
+    .notNull()
+    .default("tiptap_v1"),
+  // Tracks node schema revisions for migrations
+
+  // Legacy content fields (nullable for backward compatibility)
+  context: text("context"), // optional stem/passage text (deprecated, use contentDoc)
+  questionText: text("question_text"), // deprecated, use contentDoc
   referenceImages: text("reference_images")
     .array()
     .notNull()
     .default([]),
-  // store URLs or storage paths
+  // Quick lookup for image URLs (also stored in contentDoc)
 
   maxMarks: integer("max_marks").notNull(),
 

@@ -1,0 +1,128 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$description": "MathCraft Design Tokens - Export for design tools and native apps",
+  "color": {
+    "light": {
+      "background": { "value": "hsl(215, 35%, 97%)", "hex": "#F5F7FA" },
+      "foreground": { "value": "hsl(222, 32%, 12%)", "hex": "#151B27" },
+      "card": { "value": "#FFFFFF", "hex": "#FFFFFF" },
+      "cardForeground": { "value": "hsl(222, 32%, 12%)", "hex": "#151B27" },
+      "primary": { "value": "hsl(221, 70%, 50%)", "hex": "#2563EB" },
+      "primaryForeground": { "value": "hsl(210, 40%, 98%)", "hex": "#F8FAFC" },
+      "secondary": { "value": "hsl(210, 28%, 96%)", "hex": "#F1F5F9" },
+      "secondaryForeground": { "value": "hsl(222, 32%, 15%)", "hex": "#1A2130" },
+      "muted": { "value": "hsl(214, 28%, 94%)", "hex": "#EDF1F7" },
+      "mutedForeground": { "value": "hsl(215, 15%, 46%)", "hex": "#64748B" },
+      "accent": { "value": "hsl(214, 50%, 95%)", "hex": "#EEF4FC" },
+      "accentForeground": { "value": "hsl(222, 32%, 15%)", "hex": "#1A2130" },
+      "destructive": { "value": "hsl(0, 72%, 58%)", "hex": "#E53935" },
+      "destructiveForeground": { "value": "hsl(210, 40%, 98%)", "hex": "#F8FAFC" },
+      "border": { "value": "hsl(214, 26%, 88%)", "hex": "#DAE1EB" },
+      "input": { "value": "hsl(214, 26%, 92%)", "hex": "#E6EBF2" },
+      "ring": { "value": "hsl(221, 75%, 55%)", "hex": "#3B82F6" }
+    },
+    "dark": {
+      "background": { "value": "hsl(222, 60%, 6%)", "hex": "#060A13" },
+      "foreground": { "value": "hsl(210, 40%, 96%)", "hex": "#F1F5F9" },
+      "card": { "value": "hsl(222, 60%, 7%)", "hex": "#070C17" },
+      "cardForeground": { "value": "hsl(210, 40%, 96%)", "hex": "#F1F5F9" },
+      "primary": { "value": "hsl(217, 85%, 68%)", "hex": "#60A5FA" },
+      "primaryForeground": { "value": "hsl(222, 47%, 11%)", "hex": "#0F172A" },
+      "secondary": { "value": "hsl(220, 26%, 18%)", "hex": "#222A3A" },
+      "secondaryForeground": { "value": "hsl(210, 40%, 96%)", "hex": "#F1F5F9" },
+      "muted": { "value": "hsl(220, 24%, 16%)", "hex": "#1E2535" },
+      "mutedForeground": { "value": "hsl(215, 20%, 70%)", "hex": "#A1B0C4" },
+      "accent": { "value": "hsl(220, 30%, 20%)", "hex": "#242D3D" },
+      "accentForeground": { "value": "hsl(210, 40%, 96%)", "hex": "#F1F5F9" },
+      "destructive": { "value": "hsl(0, 65%, 40%)", "hex": "#A91E1E" },
+      "destructiveForeground": { "value": "hsl(210, 40%, 98%)", "hex": "#F8FAFC" },
+      "border": { "value": "hsl(220, 26%, 24%)", "hex": "#2D3748" },
+      "input": { "value": "hsl(220, 26%, 20%)", "hex": "#262F3F" },
+      "ring": { "value": "hsl(221, 80%, 65%)", "hex": "#5B9CF6" }
+    },
+    "diagram": {
+      "grid": { "value": "#E5E7EB", "hex": "#E5E7EB" },
+      "selection": { "value": "hsl(221, 83%, 60%)", "hex": "#3B82F6" }
+    }
+  },
+  "typography": {
+    "fontFamily": {
+      "sans": "Inter, system-ui, sans-serif",
+      "serif": "Merriweather, Georgia, serif",
+      "mono": "JetBrains Mono, SFMono-Regular, monospace"
+    },
+    "fontSize": {
+      "xs": { "value": "0.75rem", "px": 12 },
+      "sm": { "value": "0.875rem", "px": 14 },
+      "md": { "value": "1rem", "px": 16 },
+      "lg": { "value": "1.125rem", "px": 18 },
+      "xl": { "value": "1.25rem", "px": 20 },
+      "2xl": { "value": "1.5rem", "px": 24 },
+      "3xl": { "value": "1.875rem", "px": 30 },
+      "4xl": { "value": "2.25rem", "px": 36 }
+    },
+    "fontWeight": {
+      "regular": 400,
+      "medium": 500,
+      "semibold": 600
+    },
+    "lineHeight": {
+      "tight": 1.25,
+      "default": 1.5,
+      "relaxed": 1.7
+    }
+  },
+  "spacing": {
+    "0": { "value": "0px", "px": 0 },
+    "1": { "value": "4px", "px": 4 },
+    "2": { "value": "8px", "px": 8 },
+    "3": { "value": "12px", "px": 12 },
+    "4": { "value": "16px", "px": 16 },
+    "5": { "value": "20px", "px": 20 },
+    "6": { "value": "24px", "px": 24 },
+    "8": { "value": "32px", "px": 32 },
+    "10": { "value": "40px", "px": 40 },
+    "12": { "value": "48px", "px": 48 },
+    "16": { "value": "64px", "px": 64 }
+  },
+  "radius": {
+    "none": { "value": "0px", "px": 0 },
+    "sm": { "value": "6px", "px": 6 },
+    "md": { "value": "8px", "px": 8 },
+    "lg": { "value": "12px", "px": 12 },
+    "xl": { "value": "16px", "px": 16 },
+    "full": { "value": "999px", "px": 999 }
+  },
+  "motion": {
+    "duration": {
+      "fast": { "value": "120ms", "ms": 120 },
+      "base": { "value": "200ms", "ms": 200 },
+      "slow": { "value": "320ms", "ms": 320 }
+    },
+    "easing": {
+      "standard": "cubic-bezier(0.4, 0, 0.2, 1)",
+      "decelerate": "cubic-bezier(0, 0, 0.2, 1)",
+      "accelerate": "cubic-bezier(0.4, 0, 1, 1)"
+    }
+  },
+  "elevation": {
+    "none": "none",
+    "xs": "0 1px 2px rgba(15, 23, 42, 0.06)",
+    "sm": "0 2px 6px rgba(15, 23, 42, 0.08)",
+    "md": "0 6px 18px rgba(15, 23, 42, 0.12)",
+    "lg": "0 12px 32px rgba(15, 23, 42, 0.18)"
+  },
+  "breakpoints": {
+    "xs": { "value": "0px", "px": 0 },
+    "sm": { "value": "640px", "px": 640 },
+    "md": { "value": "768px", "px": 768 },
+    "lg": { "value": "1024px", "px": 1024 },
+    "xl": { "value": "1280px", "px": 1280 },
+    "2xl": { "value": "1536px", "px": 1536 }
+  },
+  "layout": {
+    "worksheetMaxWidth": { "value": "793px", "px": 793, "description": "A4 width ~210mm" },
+    "sidebarWidth": { "value": "256px", "px": 256 }
+  }
+}
+
