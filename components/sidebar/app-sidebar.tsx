@@ -1,22 +1,19 @@
 /*
 <ai_context>
-This client component provides the sidebar for the app.
+This client component provides the main sidebar for the MathCraft app.
+Contains navigation for teachers (Questions, Papers) and students (Answers, Submit).
 </ai_context>
 */
 
 "use client"
 
 import {
-  AudioWaveform,
-  BookOpen,
-  Bot,
-  Command,
-  Frame,
-  GalleryVerticalEnd,
-  Map,
-  PieChart,
-  Settings2,
-  SquareTerminal
+  FileText,
+  HelpCircle,
+  Home,
+  MessageSquareText,
+  Pencil,
+  Plus
 } from "lucide-react"
 import * as React from "react"
 
@@ -25,102 +22,97 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
-  SidebarRail
+  SidebarRail,
+  useSidebar
 } from "@/components/ui/sidebar"
 import { NavMain } from "./nav-main"
-import { NavProjects } from "./nav-projects"
 import { NavUser } from "./nav-user"
 import { TeamSwitcher } from "./team-switcher"
 
-// Sample data
-const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg"
+const navGroups = [
+  {
+    label: "Overview",
+    items: [
+      {
+        title: "Dashboard",
+        url: "/dashboard",
+        icon: Home
+      }
+    ]
   },
-  teams: [
-    {
-      name: "Acme Inc",
-      logo: GalleryVerticalEnd,
-      plan: "Enterprise"
-    },
-    {
-      name: "Acme Corp.",
-      logo: AudioWaveform,
-      plan: "Startup"
-    },
-    {
-      name: "Evil Corp.",
-      logo: Command,
-      plan: "Free"
-    }
-  ],
-  navMain: [
-    {
-      title: "Playground",
-      url: "#",
-      icon: SquareTerminal,
-      isActive: true,
-      items: [
-        { title: "History", url: "#" },
-        { title: "Starred", url: "#" },
-        { title: "Settings", url: "#" }
-      ]
-    },
-    {
-      title: "Models",
-      url: "#",
-      icon: Bot,
-      items: [
-        { title: "Genesis", url: "#" },
-        { title: "Explorer", url: "#" },
-        { title: "Quantum", url: "#" }
-      ]
-    },
-    {
-      title: "Documentation",
-      url: "#",
-      icon: BookOpen,
-      items: [
-        { title: "Introduction", url: "#" },
-        { title: "Get Started", url: "#" },
-        { title: "Tutorials", url: "#" },
-        { title: "Changelog", url: "#" }
-      ]
-    },
-    {
-      title: "Settings",
-      url: "#",
-      icon: Settings2,
-      items: [
-        { title: "General", url: "#" },
-        { title: "Team", url: "#" },
-        { title: "Billing", url: "#" },
-        { title: "Limits", url: "#" }
-      ]
-    }
-  ],
-  projects: [
-    { name: "Design Engineering", url: "#", icon: Frame },
-    { name: "Sales & Marketing", url: "#", icon: PieChart },
-    { name: "Travel", url: "#", icon: Map }
-  ]
-}
+  {
+    label: "Content",
+    items: [
+      {
+        title: "Questions",
+        url: "/questions",
+        icon: HelpCircle,
+        action: {
+          icon: Plus,
+          url: "/questions/new",
+          label: "Create new question",
+          text: "New"
+        }
+      },
+      {
+        title: "Papers",
+        url: "/papers",
+        icon: FileText,
+        action: {
+          icon: Plus,
+          url: "/papers/new",
+          label: "Create new paper",
+          text: "New"
+        }
+      }
+    ]
+  },
+  {
+    label: "Student",
+    items: [
+      {
+        title: "My Answers",
+        url: "/answers",
+        icon: MessageSquareText
+      },
+      {
+        title: "Submit Work",
+        url: "/submit",
+        icon: Pencil
+      }
+    ]
+  }
+]
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { state, setOpen } = useSidebar()
+  const isCollapsed = state === "collapsed"
+
+  const handleSidebarClick = () => {
+    if (isCollapsed) {
+      setOpen(true)
+    }
+  }
+
   return (
-    <Sidebar collapsible="icon" {...props}>
+    <Sidebar
+      collapsible="icon"
+      {...props}
+      className="group/sidebar"
+      onClick={handleSidebarClick}
+    >
       <SidebarHeader>
-        <TeamSwitcher teams={data.teams} />
+        <TeamSwitcher />
       </SidebarHeader>
+
       <SidebarContent>
-        <NavMain items={data.navMain} />
-        <NavProjects projects={data.projects} />
+        <NavMain groups={navGroups} />
       </SidebarContent>
+
       <SidebarFooter>
         <NavUser />
       </SidebarFooter>
+
       <SidebarRail />
     </Sidebar>
   )

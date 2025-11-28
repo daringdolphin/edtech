@@ -29,7 +29,7 @@ export default function LoginPage() {
   const { toast } = useToast()
   const router = useRouter()
   const searchParams = useSearchParams()
-  const redirect = searchParams.get('redirect') || '/home'
+  const redirect = searchParams.get('redirect') || '/dashboard'
 
   async function handleLogin(formData: FormData) {
     setIsLoading(true)
