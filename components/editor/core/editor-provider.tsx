@@ -8,12 +8,15 @@ Uses refs for callbacks to prevent editor recreation on prop changes.
 
 "use client"
 
-import { useEditor as useTipTapEditor } from "@tiptap/react"
+import { useEditor as useTipTapEditor, type Editor } from "@tiptap/react"
+import type { EditorView } from "@tiptap/pm/view"
 import { useEffect, useCallback, useMemo, useRef } from "react"
+import { toast } from "sonner"
 
 import { buildWorksheetExtensions } from "../extensions/registry"
 import { EditorContext, type QuestionBlockCallbacks } from "./editor-context"
 import { normalizeEditorDoc } from "@/lib/editor"
+import { uploadPaperScreenshot, validatePaperImageFile } from "@/lib/uploads"
 import type { SelectPaperBlock } from "@/db/schema"
 import type {
   QuestionBlockDoc,
@@ -74,6 +77,8 @@ export function EditorProvider({
   const onBlockChangeRef = useRef(onQuestionBlockChange)
   const onOverridesChangeRef = useRef(onQuestionBlockOverridesChange)
   const onBlockDeleteRef = useRef(onQuestionBlockDelete)
+  const paperIdRef = useRef(paperId)
+  const editorRef = useRef<Editor | null>(null)
 
   // Keep refs in sync with latest values
   useEffect(() => {
@@ -83,6 +88,10 @@ export function EditorProvider({
     onOverridesChangeRef.current = onQuestionBlockOverridesChange
     onBlockDeleteRef.current = onQuestionBlockDelete
   }, [blocksById, questionBlocks, onQuestionBlockChange, onQuestionBlockOverridesChange, onQuestionBlockDelete])
+
+  useEffect(() => {
+    paperIdRef.current = paperId
+  }, [paperId])
 
   // Stable callbacks that read from refs - these never change identity
   const getBlockById = useCallback(
@@ -122,6 +131,110 @@ export function EditorProvider({
     []
   )
 
+  interface ClipboardUploadOptions {
+    editorInstance: Editor
+    file: File
+    paperIdValue: number
+    placeholderSrc: string
+  }
+
+  const uploadImageFromClipboard = useCallback(
+    async ({ editorInstance, file, paperIdValue, placeholderSrc }: ClipboardUploadOptions) => {
+      if (!editorInstance || editorInstance.isDestroyed) {
+        URL.revokeObjectURL(placeholderSrc)
+        return
+      }
+
+      try {
+        const { url } = await uploadPaperScreenshot({
+          file,
+          paperId: paperIdValue
+        })
+
+        if (editorInstance.isDestroyed) {
+          return
+        }
+
+        const updated = replaceImageSource(editorInstance, placeholderSrc, url)
+        if (!updated) {
+          // User deleted the placeholder before upload completed—respect their intent.
+          return
+        }
+      } catch (error) {
+        if (!editorInstance || editorInstance.isDestroyed) {
+          return
+        }
+
+        removeImageBySource(editorInstance, placeholderSrc)
+        const message =
+          error instanceof Error ? error.message : "Failed to upload image."
+        toast.error(message)
+      } finally {
+        URL.revokeObjectURL(placeholderSrc)
+      }
+    },
+    []
+  )
+
+  const handleImagePaste = useCallback(
+    (_view: EditorView, event: ClipboardEvent) => {
+      const editorInstance = editorRef.current
+      const paperIdValue = paperIdRef.current
+
+      if (!editorInstance || !paperIdValue) {
+        return false
+      }
+
+      const clipboardItems = Array.from(event.clipboardData?.items ?? [])
+      const imageItem = clipboardItems.find(
+        item => item.kind === "file" && item.type.startsWith("image/")
+      )
+
+      if (!imageItem) {
+        return false
+      }
+
+      const file = imageItem.getAsFile()
+      if (!file) {
+        return false
+      }
+
+      event.preventDefault()
+
+      const validationError = validatePaperImageFile(file)
+      if (validationError) {
+        toast.error(validationError)
+        return true
+      }
+
+      const placeholderSrc = URL.createObjectURL(file)
+      const inserted = editorInstance
+        .chain()
+        .focus()
+        .setImage({
+          src: placeholderSrc,
+          alt: file.name || "Screenshot"
+        })
+        .run()
+
+      if (!inserted) {
+        URL.revokeObjectURL(placeholderSrc)
+        toast.error("Could not insert image.")
+        return true
+      }
+
+      void uploadImageFromClipboard({
+        editorInstance,
+        file,
+        paperIdValue,
+        placeholderSrc
+      })
+
+      return true
+    },
+    [uploadImageFromClipboard]
+  )
+
   // Build extensions with question block support
   const extensions = useMemo(
     () =>
@@ -149,7 +262,8 @@ export function EditorProvider({
     editorProps: {
       attributes: {
         class: "focus:outline-none min-h-[500px] px-6 py-4 text-foreground leading-relaxed"
-      }
+      },
+      handlePaste: handleImagePaste
     },
     onUpdate: ({ editor }) => {
       const doc = editor.getJSON()
@@ -157,6 +271,10 @@ export function EditorProvider({
       onUpdate?.(normalizedDoc)
     }
   }, [])
+
+  useEffect(() => {
+    editorRef.current = editor
+  }, [editor])
 
   // Update content when prop changes
   useEffect(() => {
@@ -213,5 +331,62 @@ export function EditorProvider({
       {children}
     </EditorContext.Provider>
   )
+}
+
+function replaceImageSource(editor: Editor, currentSrc: string, newSrc: string): boolean {
+  if (!editor || editor.isDestroyed) {
+    return false
+  }
+
+  return editor.commands.command(({ tr, state }) => {
+    let updated = false
+
+    state.doc.descendants((node, pos) => {
+      if (updated) {
+        return false
+      }
+
+      if (node.type.name === "image" && node.attrs.src === currentSrc) {
+        tr.setNodeMarkup(pos, undefined, {
+          ...node.attrs,
+          src: newSrc
+        })
+        updated = true
+      }
+
+      return updated ? false : undefined
+    })
+
+    if (updated) {
+      tr.setMeta("addToHistory", false)
+    }
+
+    return updated
+  })
+}
+
+function removeImageBySource(editor: Editor, src: string): boolean {
+  if (!editor || editor.isDestroyed) {
+    return false
+  }
+
+  return editor.commands.command(({ tr, state }) => {
+    let removed = false
+
+    state.doc.descendants((node, pos) => {
+      if (removed) {
+        return false
+      }
+
+      if (node.type.name === "image" && node.attrs.src === src) {
+        tr.delete(pos, pos + node.nodeSize)
+        removed = true
+      }
+
+      return removed ? false : undefined
+    })
+
+    return removed
+  })
 }
 
