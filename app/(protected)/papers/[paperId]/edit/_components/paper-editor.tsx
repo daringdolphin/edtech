@@ -1,19 +1,24 @@
 /*
 <ai_context>
 Client component for the paper editor.
-Handles TipTap editor state, auto-save, and title editing.
+Handles TipTap editor state, auto-save, title editing, and question block management.
 </ai_context>
 */
 
 "use client"
 
-import { useState, useCallback, useEffect, useRef } from "react"
+import { useState, useCallback, useEffect, useRef, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { ArrowLeft, Check, Loader2, MoreHorizontal, Trash2 } from "lucide-react"
 
-import { SelectPaper } from "@/db/schema"
+import { SelectPaper, SelectPaperBlock } from "@/db/schema"
 import { updatePaperAction, deletePaperAction } from "@/actions/db/papers-actions"
+import {
+  addQuestionToPaperAction,
+  updatePaperBlockAction,
+  deletePaperBlockAction
+} from "@/actions/db/paper-blocks-actions"
 import { WorksheetEditor } from "@/components/editor"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -35,12 +40,18 @@ import {
   AlertDialogTitle
 } from "@/components/ui/alert-dialog"
 import { toast } from "sonner"
+import type {
+  QuestionType,
+  QuestionBlockDoc,
+  QuestionBlockOverrides
+} from "@/types"
 
 interface PaperEditorProps {
   paper: SelectPaper
+  initialBlocks?: SelectPaperBlock[]
 }
 
-export function PaperEditor({ paper }: PaperEditorProps) {
+export function PaperEditor({ paper, initialBlocks = [] }: PaperEditorProps) {
   const router = useRouter()
   const [title, setTitle] = useState(paper.title)
   const [content, setContent] = useState<Record<string, unknown>>(
@@ -50,6 +61,10 @@ export function PaperEditor({ paper }: PaperEditorProps) {
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Question blocks state
+  const [blocks, setBlocks] = useState<SelectPaperBlock[]>(initialBlocks)
+  const blockSaveTimeoutRef = useRef<Map<number, NodeJS.Timeout>>(new Map())
 
   // Auto-save with debounce
   const saveChanges = useCallback(
@@ -112,6 +127,140 @@ export function PaperEditor({ paper }: PaperEditorProps) {
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current)
       }
+      // Cleanup block save timeouts
+      blockSaveTimeoutRef.current.forEach(timeout => clearTimeout(timeout))
+    }
+  }, [])
+
+  // Handle adding a question block
+  const handleAddQuestionBlock = useCallback(
+    async (questionType: QuestionType): Promise<SelectPaperBlock | null> => {
+      try {
+        const result = await addQuestionToPaperAction({
+          paperId: paper.id,
+          questionType
+        })
+
+        if (result.isSuccess && result.data) {
+          // Add to local state
+          setBlocks(prev => [...prev, result.data])
+          return result.data
+        } else {
+          toast.error(result.message || "Failed to add question")
+          return null
+        }
+      } catch (error) {
+        console.error("Error adding question block:", error)
+        toast.error("Failed to add question")
+        return null
+      }
+    },
+    [paper.id]
+  )
+
+  // Handle question block content change (debounced)
+  const handleQuestionBlockChange = useCallback(
+    (blockId: number, blockDoc: QuestionBlockDoc) => {
+      // Update local state immediately (optimistic)
+      setBlocks(prev =>
+        prev.map(block =>
+          block.id === blockId ? { ...block, blockDoc } : block
+        )
+      )
+
+      // Clear existing timeout for this block
+      const existingTimeout = blockSaveTimeoutRef.current.get(blockId)
+      if (existingTimeout) {
+        clearTimeout(existingTimeout)
+      }
+
+      // Debounce the save
+      const timeout = setTimeout(async () => {
+        try {
+          const result = await updatePaperBlockAction({
+            blockId,
+            blockDoc
+          })
+
+          if (!result.isSuccess) {
+            toast.error("Failed to save question changes")
+          }
+        } catch (error) {
+          console.error("Error saving question block:", error)
+          toast.error("Failed to save question changes")
+        }
+      }, 1000)
+
+      blockSaveTimeoutRef.current.set(blockId, timeout)
+    },
+    []
+  )
+
+  // Handle question block overrides change (debounced)
+  const handleQuestionBlockOverridesChange = useCallback(
+    (blockId: number, overrides: Partial<QuestionBlockOverrides>) => {
+      // Update local state immediately
+      setBlocks(prev =>
+        prev.map(block =>
+          block.id === blockId
+            ? {
+                ...block,
+                overrides: { ...(block.overrides as QuestionBlockOverrides), ...overrides }
+              }
+            : block
+        )
+      )
+
+      // Clear existing timeout for this block
+      const existingTimeout = blockSaveTimeoutRef.current.get(blockId)
+      if (existingTimeout) {
+        clearTimeout(existingTimeout)
+      }
+
+      // Debounce the save
+      const timeout = setTimeout(async () => {
+        try {
+          const result = await updatePaperBlockAction({
+            blockId,
+            overrides
+          })
+
+          if (!result.isSuccess) {
+            toast.error("Failed to save question settings")
+          }
+        } catch (error) {
+          console.error("Error saving question overrides:", error)
+          toast.error("Failed to save question settings")
+        }
+      }, 500)
+
+      blockSaveTimeoutRef.current.set(blockId, timeout)
+    },
+    []
+  )
+
+  // Handle question block deletion
+  const handleQuestionBlockDelete = useCallback(async (blockId: number) => {
+    // Remove from local state immediately (optimistic)
+    setBlocks(prev => prev.filter(block => block.id !== blockId))
+
+    // Clear any pending save for this block
+    const existingTimeout = blockSaveTimeoutRef.current.get(blockId)
+    if (existingTimeout) {
+      clearTimeout(existingTimeout)
+      blockSaveTimeoutRef.current.delete(blockId)
+    }
+
+    try {
+      const result = await deletePaperBlockAction(blockId)
+
+      if (!result.isSuccess) {
+        toast.error("Failed to delete question")
+        // TODO: Could restore the block on failure
+      }
+    } catch (error) {
+      console.error("Error deleting question block:", error)
+      toast.error("Failed to delete question")
     }
   }, [])
 
@@ -193,6 +342,12 @@ export function PaperEditor({ paper }: PaperEditorProps) {
             content={content}
             onUpdate={handleContentChange}
             placeholder="Start writing your worksheet..."
+            paperId={paper.id}
+            questionBlocks={blocks}
+            onAddQuestionBlock={handleAddQuestionBlock}
+            onQuestionBlockChange={handleQuestionBlockChange}
+            onQuestionBlockOverridesChange={handleQuestionBlockOverridesChange}
+            onQuestionBlockDelete={handleQuestionBlockDelete}
           />
         </div>
       </main>

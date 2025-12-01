@@ -23,9 +23,17 @@ import {
   ImageIcon,
   Undo,
   Redo,
-  Quote
+  Quote,
+  CirclePlus,
+  FileQuestion,
+  ListChecks,
+  AlignLeft,
+  FileText
 } from "lucide-react"
 
+import type { QuestionType } from "@/types"
+
+import {DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger} from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import {
@@ -49,6 +57,7 @@ import { useState } from "react"
 
 interface EditorToolbarProps {
   editor: Editor | null
+  onAddQuestionBlock?: (questionType: QuestionType) => void
 }
 
 interface ToolbarButtonProps {
@@ -88,7 +97,7 @@ function ToolbarButton({
   )
 }
 
-export function EditorToolbar({ editor }: EditorToolbarProps) {
+export function EditorToolbar({ editor, onAddQuestionBlock }: EditorToolbarProps) {
   const [imageUrl, setImageUrl] = useState("")
   const [logoUrl, setLogoUrl] = useState("")
 
@@ -284,6 +293,39 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Add Question Dropdown */}
+      {onAddQuestionBlock && (
+        <>
+          <Separator orientation="vertical" className="mx-1 h-6" />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-8 gap-1 px-2">
+                <CirclePlus className="h-4 w-4" />
+                <span className="text-xs">Question</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem onClick={() => onAddQuestionBlock("mcq")}>
+                <ListChecks className="mr-2 h-4 w-4" />
+                Multiple Choice
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onAddQuestionBlock("short_answer")}>
+                <AlignLeft className="mr-2 h-4 w-4" />
+                Short Answer
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onAddQuestionBlock("structured")}>
+                <FileQuestion className="mr-2 h-4 w-4" />
+                Structured
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onAddQuestionBlock("essay")}>
+                <FileText className="mr-2 h-4 w-4" />
+                Essay
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </>
+      )}
     </div>
   )
 }

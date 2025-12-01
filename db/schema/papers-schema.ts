@@ -80,7 +80,7 @@ export const paperBlocksTable = pgTable(
 
     questionItemId: bigint("question_item_id", { mode: "number" }).references(
       () => questionItemsTable.id,
-      { onDelete: "cascade" }
+      { onDelete: "set null" }
     ),
 
     blockDoc: jsonb("block_doc").notNull().default({}),
@@ -104,10 +104,7 @@ export const paperBlocksTable = pgTable(
   table => ({
     perPaperPositionIdx: uniqueIndex(
       "paper_blocks_paper_id_position_idx"
-    ).on(table.paperId, table.position),
-    uniqueQuestionPerPaperIdx: uniqueIndex(
-      "paper_blocks_paper_id_question_item_id_idx"
-    ).on(table.paperId, table.questionItemId)
+    ).on(table.paperId, table.position)
   })
 )
 

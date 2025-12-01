@@ -2,13 +2,14 @@
 <ai_context>
 Edit paper page - TipTap worksheet editor.
 Full-screen editor with auto-save functionality.
+Loads paper and question blocks together for efficient editing.
 </ai_context>
 */
 
 "use server"
 
 import { notFound } from "next/navigation"
-import { getPaperAction } from "@/actions/db/papers-actions"
+import { getPaperWithBlocksAction } from "@/actions/db/paper-blocks-actions"
 import { PaperEditor } from "./_components/paper-editor"
 
 interface EditPaperPageProps {
@@ -23,11 +24,13 @@ export default async function EditPaperPage({ params }: EditPaperPageProps) {
     notFound()
   }
 
-  const { data: paper, isSuccess } = await getPaperAction(id)
+  const result = await getPaperWithBlocksAction(id)
 
-  if (!isSuccess || !paper) {
+  if (!result.isSuccess || !result.data) {
     notFound()
   }
 
-  return <PaperEditor paper={paper} />
+  const { paper, blocks } = result.data
+
+  return <PaperEditor paper={paper} initialBlocks={blocks} />
 }
