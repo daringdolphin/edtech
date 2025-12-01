@@ -21,7 +21,7 @@ export async function loginAction(
     password: formData.get("password") as string
   }
 
-  const redirectPath = (formData.get("redirect") as string) || "/home"
+  const redirectPath = (formData.get("redirect") as string) || "/papers"
 
   const { error } = await supabase.auth.signInWithPassword(data)
 
@@ -49,7 +49,7 @@ export async function signupAction(
   const { error } = await supabase.auth.signUp({
     ...data,
     options: {
-      emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`
+      emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`
     }
   })
 
@@ -81,7 +81,7 @@ export async function signoutAction(): Promise<ActionState<undefined>> {
   }
 
   revalidatePath("/", "layout")
-  redirect("/login")
+  redirect("/auth/login")
 }
 
 export async function getCurrentUserAction() {

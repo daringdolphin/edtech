@@ -34,7 +34,7 @@ export default function AuthErrorPage() {
 
         <CardContent className="flex flex-col gap-4">
           <Button asChild>
-            <Link href="/login">Try Again</Link>
+            <Link href="/auth/login">Try Again</Link>
           </Button>
 
           <Button variant="outline" asChild>
@@ -45,6 +45,8 @@ export default function AuthErrorPage() {
     </div>
   )
 }
+
+
 
 
 

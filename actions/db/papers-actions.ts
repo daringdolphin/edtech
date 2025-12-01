@@ -15,13 +15,26 @@ import {
   paperBlocksTable
 } from "@/db/schema"
 import { ActionState } from "@/types"
-import { eq, desc } from "drizzle-orm"
+import { eq, desc, or } from "drizzle-orm"
+import { getCurrentUserAction } from "@/actions/auth-actions"
 
 export async function createPaperAction(
   paper: InsertPaper
 ): Promise<ActionState<SelectPaper>> {
   try {
-    const [newPaper] = await db.insert(papersTable).values(paper).returning()
+    // Verify user is authenticated
+    const user = await getCurrentUserAction()
+    if (!user) {
+      return { isSuccess: false, message: "Unauthorized" }
+    }
+
+    // Ensure createdBy is set to current user
+    const paperData = {
+      ...paper,
+      createdBy: user.id
+    }
+
+    const [newPaper] = await db.insert(papersTable).values(paperData).returning()
     return {
       isSuccess: true,
       message: "Paper created successfully",
@@ -37,12 +50,23 @@ export async function getPaperAction(
   id: number
 ): Promise<ActionState<SelectPaper>> {
   try {
+    // Get current user (may be null if not authenticated)
+    const user = await getCurrentUserAction()
+
     const paper = await db.query.papers.findFirst({
       where: eq(papersTable.id, id)
     })
 
     if (!paper) {
       return { isSuccess: false, message: "Paper not found" }
+    }
+
+    // Check access permission: must be owner or paper must be public
+    const isOwner = user && paper.createdBy === user.id
+    const isPublic = paper.visibility === "public"
+
+    if (!isOwner && !isPublic) {
+      return { isSuccess: false, message: "Unauthorized" }
     }
 
     return {
@@ -60,8 +84,15 @@ export async function getPapersAction(
   userId?: string
 ): Promise<ActionState<SelectPaper[]>> {
   try {
+    // Verify user is authenticated
+    const user = await getCurrentUserAction()
+    if (!user) {
+      return { isSuccess: false, message: "Unauthorized" }
+    }
+
+    // Use authenticated user's ID (ignore userId parameter for security)
     const papers = await db.query.papers.findMany({
-      where: userId ? eq(papersTable.createdBy, userId) : undefined,
+      where: eq(papersTable.createdBy, user.id),
       orderBy: [desc(papersTable.updatedAt)]
     })
 
@@ -81,9 +112,32 @@ export async function updatePaperAction(
   data: Partial<InsertPaper>
 ): Promise<ActionState<SelectPaper>> {
   try {
+    // Verify user is authenticated
+    const user = await getCurrentUserAction()
+    if (!user) {
+      return { isSuccess: false, message: "Unauthorized" }
+    }
+
+    // Check if paper exists and user owns it
+    const paper = await db.query.papers.findFirst({
+      where: eq(papersTable.id, id)
+    })
+
+    if (!paper) {
+      return { isSuccess: false, message: "Paper not found" }
+    }
+
+    if (paper.createdBy !== user.id) {
+      return { isSuccess: false, message: "Unauthorized" }
+    }
+
+    // Prevent changing the owner
+    const updateData = { ...data }
+    delete updateData.createdBy
+
     const [updatedPaper] = await db
       .update(papersTable)
-      .set(data)
+      .set(updateData)
       .where(eq(papersTable.id, id))
       .returning()
 
@@ -106,6 +160,26 @@ export async function deletePaperAction(
   id: number
 ): Promise<ActionState<undefined>> {
   try {
+    // Verify user is authenticated
+    const user = await getCurrentUserAction()
+    if (!user) {
+      return { isSuccess: false, message: "Unauthorized" }
+    }
+
+    // Check if paper exists and user owns it
+    const paper = await db.query.papers.findFirst({
+      where: eq(papersTable.id, id)
+    })
+
+    if (!paper) {
+      return { isSuccess: false, message: "Paper not found" }
+    }
+
+    if (paper.createdBy !== user.id) {
+      return { isSuccess: false, message: "Unauthorized" }
+    }
+
+    // Safe to delete - user owns the paper
     await db.delete(papersTable).where(eq(papersTable.id, id))
     return {
       isSuccess: true,

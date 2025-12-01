@@ -29,7 +29,7 @@ function LoginForm() {
   const { toast } = useToast()
   const router = useRouter()
   const searchParams = useSearchParams()
-  const redirect = searchParams.get('redirect') || '/dashboard'
+  const redirect = searchParams.get('redirect') || '/papers'
 
   async function handleLogin(formData: FormData) {
     setIsLoading(true)
@@ -40,7 +40,7 @@ function LoginForm() {
           title: "Error",
           description: result.message,
           variant: "destructive"
-        })
+        });
       }
     } catch {
       // Redirect happens on success, so this catch handles unexpected errors
