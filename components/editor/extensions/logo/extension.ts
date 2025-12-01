@@ -132,5 +132,3 @@ export const Logo = Node.create<LogoOptions>({
   }
 })
 
-export default Logo
-

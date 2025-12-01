@@ -90,5 +90,3 @@ export const Spacer = Node.create<SpacerOptions>({
   }
 })
 
-export default Spacer
-

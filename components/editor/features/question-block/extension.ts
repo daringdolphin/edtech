@@ -8,12 +8,11 @@ Uses a React NodeView for rich interactive rendering.
 
 import { Node, mergeAttributes } from "@tiptap/core"
 import { ReactNodeViewRenderer } from "@tiptap/react"
-import { QuestionBlockView } from "./question-block-view"
+import { QuestionBlockView } from "./node-view"
 import type { SelectPaperBlock } from "@/db/schema"
 import type {
   QuestionBlockDoc,
-  QuestionBlockOverrides,
-  QuestionBlockMeta
+  QuestionBlockOverrides
 } from "@/types"
 
 export interface QuestionBlockOptions {
@@ -214,6 +213,4 @@ export const QuestionBlock = Node.create<QuestionBlockOptions>({
     }
   }
 })
-
-export default QuestionBlock
 
