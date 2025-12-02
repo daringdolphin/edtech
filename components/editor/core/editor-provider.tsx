@@ -15,7 +15,16 @@ import { toast } from "sonner"
 
 import { buildWorksheetExtensions } from "../extensions/registry"
 import { EditorContext, type QuestionBlockCallbacks } from "./editor-context"
-import { normalizeEditorDoc } from "@/lib/editor"
+import {
+  hydrateEditorDoc,
+  normalizeEditorDoc,
+  prepareEditorDocForSave,
+  IMAGE_PENDING_PROTOCOL
+} from "@/lib/editor"
+import {
+  updateImageAttrsByUploadKey,
+  removeImageByUploadKey
+} from "./editor-image-helpers"
 import { uploadPaperScreenshot, validatePaperImageFile } from "@/lib/uploads"
 import type { SelectPaperBlock } from "@/db/schema"
 import type {
@@ -136,10 +145,17 @@ export function EditorProvider({
     file: File
     paperIdValue: number
     placeholderSrc: string
+    uploadKey: string
   }
 
   const uploadImageFromClipboard = useCallback(
-    async ({ editorInstance, file, paperIdValue, placeholderSrc }: ClipboardUploadOptions) => {
+    async ({
+      editorInstance,
+      file,
+      paperIdValue,
+      placeholderSrc,
+      uploadKey
+    }: ClipboardUploadOptions) => {
       if (!editorInstance || editorInstance.isDestroyed) {
         URL.revokeObjectURL(placeholderSrc)
         return
@@ -155,7 +171,12 @@ export function EditorProvider({
           return
         }
 
-        const updated = replaceImageSource(editorInstance, placeholderSrc, url)
+        const updated = updateImageAttrsByUploadKey(editorInstance, uploadKey, attrs => ({
+          ...attrs,
+          src: url,
+          dataUploadStatus: "complete",
+          dataUploadPersistedSrc: url
+        }))
         if (!updated) {
           // User deleted the placeholder before upload completed—respect their intent.
           return
@@ -165,7 +186,7 @@ export function EditorProvider({
           return
         }
 
-        removeImageBySource(editorInstance, placeholderSrc)
+        removeImageByUploadKey(editorInstance, uploadKey)
         const message =
           error instanceof Error ? error.message : "Failed to upload image."
         toast.error(message)
@@ -208,12 +229,17 @@ export function EditorProvider({
       }
 
       const placeholderSrc = URL.createObjectURL(file)
+      const uploadKey = crypto.randomUUID()
+      const persistedSrc = `${IMAGE_PENDING_PROTOCOL}${uploadKey}`
       const inserted = editorInstance
         .chain()
         .focus()
         .setImage({
           src: placeholderSrc,
-          alt: file.name || "Screenshot"
+          alt: file.name || "Screenshot",
+          dataUploadKey: uploadKey,
+          dataUploadStatus: "pending",
+          dataUploadPersistedSrc: persistedSrc
         })
         .run()
 
@@ -227,7 +253,8 @@ export function EditorProvider({
         editorInstance,
         file,
         paperIdValue,
-        placeholderSrc
+        placeholderSrc,
+        uploadKey
       })
 
       return true
@@ -251,13 +278,21 @@ export function EditorProvider({
     [placeholder, getBlockById, handleBlockChange, handleOverridesChange, handleBlockDelete, getDisplayNumber]
   )
 
+  const initialContent = useMemo(
+    () =>
+      hydrateEditorDoc(
+        content || {
+          type: "doc",
+          content: [{ type: "paragraph" }]
+        }
+      ),
+    [content]
+  )
+
   const editor = useTipTapEditor({
     immediatelyRender: false,
     extensions,
-    content: content || {
-      type: "doc",
-      content: [{ type: "paragraph" }]
-    },
+    content: initialContent,
     editable,
     editorProps: {
       attributes: {
@@ -268,7 +303,8 @@ export function EditorProvider({
     onUpdate: ({ editor }) => {
       const doc = editor.getJSON()
       const normalizedDoc = normalizeEditorDoc(doc)
-      onUpdate?.(normalizedDoc)
+      const preparedDoc = prepareEditorDocForSave(normalizedDoc)
+      onUpdate?.(preparedDoc)
     }
   }, [])
 
@@ -280,9 +316,10 @@ export function EditorProvider({
   useEffect(() => {
     if (editor && content && !editor.isDestroyed) {
       const currentContent = JSON.stringify(editor.getJSON())
-      const newContent = JSON.stringify(content)
+      const hydratedNext = hydrateEditorDoc(content)
+      const newContent = JSON.stringify(hydratedNext)
       if (currentContent !== newContent) {
-        editor.commands.setContent(content)
+        editor.commands.setContent(hydratedNext)
       }
     }
   }, [editor, content])
@@ -332,61 +369,3 @@ export function EditorProvider({
     </EditorContext.Provider>
   )
 }
-
-function replaceImageSource(editor: Editor, currentSrc: string, newSrc: string): boolean {
-  if (!editor || editor.isDestroyed) {
-    return false
-  }
-
-  return editor.commands.command(({ tr, state }) => {
-    let updated = false
-
-    state.doc.descendants((node, pos) => {
-      if (updated) {
-        return false
-      }
-
-      if (node.type.name === "image" && node.attrs.src === currentSrc) {
-        tr.setNodeMarkup(pos, undefined, {
-          ...node.attrs,
-          src: newSrc
-        })
-        updated = true
-      }
-
-      return updated ? false : undefined
-    })
-
-    if (updated) {
-      tr.setMeta("addToHistory", false)
-    }
-
-    return updated
-  })
-}
-
-function removeImageBySource(editor: Editor, src: string): boolean {
-  if (!editor || editor.isDestroyed) {
-    return false
-  }
-
-  return editor.commands.command(({ tr, state }) => {
-    let removed = false
-
-    state.doc.descendants((node, pos) => {
-      if (removed) {
-        return false
-      }
-
-      if (node.type.name === "image" && node.attrs.src === src) {
-        tr.delete(pos, pos + node.nodeSize)
-        removed = true
-      }
-
-      return removed ? false : undefined
-    })
-
-    return removed
-  })
-}
-

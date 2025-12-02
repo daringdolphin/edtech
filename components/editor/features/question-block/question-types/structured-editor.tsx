@@ -7,13 +7,13 @@ Renders sub-parts (a, b, c...) with individual marks and answer lines.
 
 "use client"
 
-import { useCallback, useMemo } from "react"
+import { useCallback } from "react"
 import { Plus, X } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { RichTextArea } from "../ui/rich-text-area"
-import { createSimpleDoc, extractPlainText } from "@/lib/editor"
+import { createSimpleDoc } from "@/lib/editor"
 
 import type { QuestionBlockPart } from "@/types"
 
@@ -22,14 +22,15 @@ interface PartEditorProps {
   onUpdate: (updated: QuestionBlockPart) => void
   onDelete: () => void
   canDelete: boolean
+  paperId?: number
 }
 
-function PartEditor({ part, onUpdate, onDelete, canDelete }: PartEditorProps) {
+function PartEditor({ part, onUpdate, onDelete, canDelete, paperId }: PartEditorProps) {
   const handleContentChange = useCallback(
-    (text: string) => {
+    (doc: QuestionBlockPart["content"]) => {
       onUpdate({
         ...part,
-        content: createSimpleDoc(text)
+        content: doc
       })
     },
     [part, onUpdate]
@@ -42,8 +43,6 @@ function PartEditor({ part, onUpdate, onDelete, canDelete }: PartEditorProps) {
     [part, onUpdate]
   )
 
-  const plainText = useMemo(() => extractPlainText(part.content), [part.content])
-
   return (
     <div className="flex items-start gap-2 group border-l-2 border-muted pl-3 py-1">
       <div className="flex h-5 w-5 shrink-0 items-center justify-center text-xs font-medium text-muted-foreground">
@@ -51,10 +50,11 @@ function PartEditor({ part, onUpdate, onDelete, canDelete }: PartEditorProps) {
       </div>
       <div className="flex-1 space-y-1">
         <RichTextArea
-          value={plainText}
+          value={part.content}
           onChange={handleContentChange}
           placeholder={`Part ${part.label}...`}
           className="text-sm"
+          paperId={paperId}
         />
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <Input
@@ -84,9 +84,10 @@ function PartEditor({ part, onUpdate, onDelete, canDelete }: PartEditorProps) {
 interface StructuredEditorProps {
   parts: QuestionBlockPart[]
   onPartsChange: (parts: QuestionBlockPart[]) => void
+  paperId?: number
 }
 
-export function StructuredEditor({ parts, onPartsChange }: StructuredEditorProps) {
+export function StructuredEditor({ parts, onPartsChange, paperId }: StructuredEditorProps) {
   const handlePartUpdate = useCallback(
     (index: number, updated: QuestionBlockPart) => {
       const newParts = [...parts]
@@ -132,6 +133,7 @@ export function StructuredEditor({ parts, onPartsChange }: StructuredEditorProps
           onUpdate={updated => handlePartUpdate(index, updated)}
           onDelete={() => handlePartDelete(index)}
           canDelete={parts.length > 1}
+          paperId={paperId}
         />
       ))}
       <Button

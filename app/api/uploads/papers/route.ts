@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
     const filePath = buildStoragePath(paperId, user.id, file.name)
     const fileBuffer = Buffer.from(await file.arrayBuffer())
 
-    const adminClient = createAdminClient()
+    const adminClient = await createAdminClient()
     const { error: uploadError } = await adminClient.storage.from(bucket).upload(filePath, fileBuffer, {
       contentType: file.type || "application/octet-stream",
       cacheControl: "3600",

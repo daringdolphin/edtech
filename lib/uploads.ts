@@ -38,6 +38,10 @@ interface UploadPaperScreenshotPayload {
   path?: string
 }
 
+interface UploadPaperScreenshotErrorPayload {
+  message?: string
+}
+
 const PAPER_UPLOAD_ENDPOINT = "/api/uploads/papers"
 
 export function validatePaperImageFile(file: File): string | null {
@@ -83,16 +87,18 @@ export async function uploadPaperScreenshot({
     signal
   })
 
-  let payload: UploadPaperScreenshotPayload | { message?: string } | null = null
+  let payload: UploadPaperScreenshotPayload | UploadPaperScreenshotErrorPayload | null = null
   try {
-    payload = (await response.json()) as typeof payload
+    payload = (await response.json()) as UploadPaperScreenshotPayload | UploadPaperScreenshotErrorPayload
   } catch {
     payload = null
   }
 
   if (!response.ok) {
     const message =
-      (payload && typeof payload === "object" && "message" in payload && payload.message) ||
+      (payload && typeof payload === "object" && "message" in payload && typeof payload.message === "string"
+        ? payload.message
+        : undefined) ||
       "Failed to upload image."
     throw new Error(typeof message === "string" ? message : "Failed to upload image.")
   }
