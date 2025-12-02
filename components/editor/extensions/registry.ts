@@ -8,13 +8,13 @@ Adding new extensions only requires updating this registry.
 
 import StarterKit from "@tiptap/starter-kit"
 import Placeholder from "@tiptap/extension-placeholder"
-import Image from "@tiptap/extension-image"
 import Dropcursor from "@tiptap/extension-dropcursor"
 import Gapcursor from "@tiptap/extension-gapcursor"
 import type { Extensions } from "@tiptap/react"
 
 import { Spacer } from "./spacer"
 import { Logo } from "./logo"
+import { UploadableImage } from "./uploadable-image"
 import { QuestionBlock, type QuestionBlockOptions } from "../features/question-block"
 
 import type { SelectPaperBlock } from "@/db/schema"
@@ -92,7 +92,7 @@ export function buildWorksheetExtensions(
     }),
 
     // Image support
-    Image.configure({
+    UploadableImage.configure({
       HTMLAttributes: {
         class: "rounded-lg max-w-full h-auto my-4"
       },

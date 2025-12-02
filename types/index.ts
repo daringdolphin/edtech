@@ -6,3 +6,4 @@ Exports the types for the app.
 
 export * from "./server-action-types"
 export * from "./question-block-types"
+export * from "./editor-image-types"

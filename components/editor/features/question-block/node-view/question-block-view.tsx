@@ -12,7 +12,7 @@ import { NodeViewWrapper, NodeViewProps } from "@tiptap/react"
 import { useCallback, useState, useEffect, useMemo } from "react"
 
 import { cn } from "@/lib/utils"
-import { normalizeNumericId, extractPlainText, createSimpleDoc } from "@/lib/editor"
+import { normalizeNumericId, extractPlainText } from "@/lib/editor"
 
 import { BlockHeader, RichTextArea } from "../ui"
 import {
@@ -29,6 +29,7 @@ import type {
   MCQOption,
   QuestionBlockPart
 } from "@/types"
+import type { JSONContent } from "@tiptap/react"
 
 interface QuestionBlockViewProps extends NodeViewProps {
   // These are passed via extension options
@@ -88,12 +89,12 @@ export function QuestionBlockView({
 
   // Handle stem change
   const handleStemChange = useCallback(
-    (text: string) => {
+    (doc: JSONContent) => {
       if (!localBlockDoc || blockId === null) return
 
       const updated: QuestionBlockDoc = {
         ...localBlockDoc,
-        stem: createSimpleDoc(text)
+        stem: doc
       }
       setLocalBlockDoc(updated)
       onBlockChange?.(blockId, updated)
@@ -208,10 +209,11 @@ export function QuestionBlockView({
             {/* Question Stem */}
             <div className="space-y-1">
               <RichTextArea
-                value={stemText}
+                value={localBlockDoc.stem}
                 onChange={handleStemChange}
                 placeholder="Enter question text..."
                 className="text-base"
+                paperId={block.paperId}
               />
             </div>
 
@@ -220,6 +222,7 @@ export function QuestionBlockView({
               <MCQEditor
                 options={localBlockDoc.options}
                 onOptionsChange={handleOptionsChange}
+                paperId={block.paperId}
               />
             )}
 
@@ -227,6 +230,7 @@ export function QuestionBlockView({
               <StructuredEditor
                 parts={localBlockDoc.parts}
                 onPartsChange={handlePartsChange}
+                paperId={block.paperId}
               />
             )}
 

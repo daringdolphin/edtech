@@ -7,12 +7,12 @@ Renders options with labels (A, B, C, D...) and allows adding/removing options.
 
 "use client"
 
-import { useCallback, useMemo } from "react"
+import { useCallback } from "react"
 import { Plus, X } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { RichTextArea } from "../ui/rich-text-area"
-import { createSimpleDoc, extractPlainText } from "@/lib/editor"
+import { createSimpleDoc } from "@/lib/editor"
 
 import type { MCQOption } from "@/types"
 
@@ -21,25 +21,25 @@ interface MCQOptionEditorProps {
   onUpdate: (updated: MCQOption) => void
   onDelete: () => void
   canDelete: boolean
+  paperId?: number
 }
 
 function MCQOptionEditor({
   option,
   onUpdate,
   onDelete,
-  canDelete
+  canDelete,
+  paperId
 }: MCQOptionEditorProps) {
   const handleContentChange = useCallback(
-    (text: string) => {
+    (doc: MCQOption["content"]) => {
       onUpdate({
         ...option,
-        content: createSimpleDoc(text)
+        content: doc
       })
     },
     [option, onUpdate]
   )
-
-  const plainText = useMemo(() => extractPlainText(option.content), [option.content])
 
   return (
     <div className="flex items-start gap-2 group">
@@ -48,10 +48,11 @@ function MCQOptionEditor({
       </div>
       <div className="flex-1">
         <RichTextArea
-          value={plainText}
+          value={option.content}
           onChange={handleContentChange}
           placeholder={`Option ${option.label}...`}
           className="text-sm"
+          paperId={paperId}
         />
       </div>
       {canDelete && (
@@ -71,9 +72,10 @@ function MCQOptionEditor({
 interface MCQEditorProps {
   options: MCQOption[]
   onOptionsChange: (options: MCQOption[]) => void
+  paperId?: number
 }
 
-export function MCQEditor({ options, onOptionsChange }: MCQEditorProps) {
+export function MCQEditor({ options, onOptionsChange, paperId }: MCQEditorProps) {
   const handleOptionUpdate = useCallback(
     (index: number, updated: MCQOption) => {
       const newOptions = [...options]
@@ -117,6 +119,7 @@ export function MCQEditor({ options, onOptionsChange }: MCQEditorProps) {
           onUpdate={updated => handleOptionUpdate(index, updated)}
           onDelete={() => handleOptionDelete(index)}
           canDelete={options.length > 2}
+          paperId={paperId}
         />
       ))}
       <Button

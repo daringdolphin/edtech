@@ -12,6 +12,9 @@ export type { SpacerOptions } from "./spacer"
 export { Logo } from "./logo"
 export type { LogoOptions } from "./logo"
 
+export { UploadableImage } from "./uploadable-image"
+export type { UploadableImageOptions } from "./uploadable-image"
+
 // Question block is exported from features for better organization
 // but re-exported here for backward compatibility
 export { QuestionBlock } from "../features/question-block"
