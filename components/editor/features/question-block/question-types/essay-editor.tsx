@@ -15,7 +15,7 @@ interface EssayEditorProps {
 
 export function EssayEditor({ answerSpace }: EssayEditorProps) {
   return (
-    <div className="pl-4">
+    <div className="ml-5">
       <AnswerSpace size={answerSpace} />
     </div>
   )

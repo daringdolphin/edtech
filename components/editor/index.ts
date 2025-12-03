@@ -57,7 +57,6 @@ export {
   QuestionBlockView,
   RichTextArea,
   AnswerSpace,
-  BlockHeader,
   MCQEditor,
   StructuredEditor,
   ShortAnswerEditor,

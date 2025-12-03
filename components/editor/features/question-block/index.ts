@@ -13,7 +13,7 @@ export type { QuestionBlockOptions } from "./extension"
 export { QuestionBlockView } from "./node-view"
 
 // UI Components
-export { RichTextArea, AnswerSpace, BlockHeader } from "./ui"
+export { RichTextArea, AnswerSpace } from "./ui"
 
 // Question Type Editors
 export {

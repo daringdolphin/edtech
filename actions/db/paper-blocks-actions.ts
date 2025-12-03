@@ -201,10 +201,19 @@ export async function updatePaperBlockAction(params: {
 
     if (overrides !== undefined) {
       // Merge with existing overrides
-      updates.overrides = {
+      const mergedOverrides = {
         ...(block.overrides as QuestionBlockOverrides),
         ...overrides
       }
+      
+      // Remove properties set to null (to clear overrides)
+      Object.keys(mergedOverrides).forEach(key => {
+        if (mergedOverrides[key as keyof typeof mergedOverrides] === null) {
+          delete mergedOverrides[key as keyof typeof mergedOverrides]
+        }
+      })
+      
+      updates.overrides = mergedOverrides
     }
 
     if (meta !== undefined) {

@@ -2,6 +2,7 @@
 <ai_context>
 MCQ (Multiple Choice Question) editor component.
 Renders options with labels (A, B, C, D...) and allows adding/removing options.
+Styled to feel native like a document list - no badges or heavy styling.
 </ai_context>
 */
 
@@ -10,7 +11,7 @@ Renders options with labels (A, B, C, D...) and allows adding/removing options.
 import { useCallback } from "react"
 import { Plus, X } from "lucide-react"
 
-import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 import { RichTextArea } from "../ui/rich-text-area"
 import { createSimpleDoc } from "@/lib/editor"
 
@@ -42,28 +43,28 @@ function MCQOptionEditor({
   )
 
   return (
-    <div className="flex items-start gap-2 group">
-      <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border bg-muted text-xs font-medium">
-        {option.label}
-      </div>
-      <div className="flex-1">
+    <div className="group/option flex items-start gap-2">
+      <span className="shrink-0 select-none text-muted-foreground">
+        {option.label}.
+      </span>
+      <div className="flex-1 min-w-0">
         <RichTextArea
           value={option.content}
           onChange={handleContentChange}
           placeholder={`Option ${option.label}...`}
-          className="text-sm"
           paperId={paperId}
         />
       </div>
       {canDelete && (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+        <button
+          className={cn(
+            "shrink-0 p-1 rounded text-muted-foreground hover:text-destructive",
+            "opacity-0 group-hover/option:opacity-100 transition-opacity"
+          )}
           onClick={onDelete}
         >
-          <X className="h-3 w-3" />
-        </Button>
+          <X className="h-3.5 w-3.5" />
+        </button>
       )}
     </div>
   )
@@ -75,7 +76,11 @@ interface MCQEditorProps {
   paperId?: number
 }
 
-export function MCQEditor({ options, onOptionsChange, paperId }: MCQEditorProps) {
+export function MCQEditor({
+  options,
+  onOptionsChange,
+  paperId
+}: MCQEditorProps) {
   const handleOptionUpdate = useCallback(
     (index: number, updated: MCQOption) => {
       const newOptions = [...options]
@@ -111,7 +116,7 @@ export function MCQEditor({ options, onOptionsChange, paperId }: MCQEditorProps)
   }, [options, onOptionsChange])
 
   return (
-    <div className="space-y-2 pl-4">
+    <div className="space-y-1 ml-5">
       {options.map((option, index) => (
         <MCQOptionEditor
           key={option.id}
@@ -122,15 +127,13 @@ export function MCQEditor({ options, onOptionsChange, paperId }: MCQEditorProps)
           paperId={paperId}
         />
       ))}
-      <Button
-        variant="ghost"
-        size="sm"
-        className="h-6 text-xs"
+      <button
+        className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 py-1"
         onClick={handleAddOption}
       >
-        <Plus className="h-3 w-3 mr-1" />
+        <Plus className="h-3 w-3" />
         Add option
-      </Button>
+      </button>
     </div>
   )
 }

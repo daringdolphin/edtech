@@ -1,7 +1,8 @@
 /*
 <ai_context>
 Answer space indicator component for students.
-Shows a dashed box where students should write their answers.
+Shows lines where students should write their answers.
+Styled minimally to feel native to the document - like ruled lines.
 </ai_context>
 */
 
@@ -15,26 +16,29 @@ interface AnswerSpaceProps {
 }
 
 export function AnswerSpace({ lines, size }: AnswerSpaceProps) {
-  const height = useMemo(() => {
-    if (lines) return lines * 24
+  const lineCount = useMemo(() => {
+    if (lines) return lines
     switch (size) {
       case "small":
-        return 48
+        return 2
       case "medium":
-        return 96
+        return 4
       case "large":
-        return 192
+        return 8
       default:
-        return 72
+        return 3
     }
   }, [lines, size])
 
+  // Generate horizontal lines like ruled paper
   return (
-    <div
-      className="border border-dashed border-muted-foreground/30 rounded bg-muted/20 flex items-center justify-center text-xs text-muted-foreground"
-      style={{ height }}
-    >
-      Answer space
+    <div className="py-1">
+      {Array.from({ length: lineCount }).map((_, i) => (
+        <div
+          key={i}
+          className="h-6 border-b border-muted-foreground/20"
+        />
+      ))}
     </div>
   )
 }

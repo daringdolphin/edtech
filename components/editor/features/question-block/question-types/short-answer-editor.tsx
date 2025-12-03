@@ -15,7 +15,7 @@ interface ShortAnswerEditorProps {
 
 export function ShortAnswerEditor({ answerLines }: ShortAnswerEditorProps) {
   return (
-    <div className="pl-4">
+    <div className="ml-5">
       <AnswerSpace lines={answerLines} />
     </div>
   )

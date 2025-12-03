@@ -59,10 +59,16 @@ export function RichTextArea({
 }: RichTextAreaProps) {
   const editorRef = useRef<Editor | null>(null)
   const paperIdRef = useRef<number | undefined>(paperId)
+  const onChangeRef = useRef(onChange)
+  const isUpdatingFromPropRef = useRef(false)
 
   useEffect(() => {
     paperIdRef.current = paperId
   }, [paperId])
+
+  useEffect(() => {
+    onChangeRef.current = onChange
+  }, [onChange])
 
   const uploadImageFromClipboard = useCallback(
     async ({
@@ -209,21 +215,25 @@ export function RichTextArea({
       editorProps: {
         attributes: {
           class: cn(
-            "min-h-[1.75rem] outline-none focus-visible:ring-1 focus-visible:ring-primary/20 rounded px-1 -mx-1 text-sm",
+            "min-h-[1.5rem] outline-none focus-visible:outline-none",
             className
           )
         },
         handlePaste: handleImagePaste
       },
       onUpdate: ({ editor }) => {
+        // Don't trigger onChange if we're updating from props
+        if (isUpdatingFromPropRef.current) {
+          return
+        }
         const doc = editor.getJSON()
         const normalized = normalizeEditorDoc(doc)
         const prepared = prepareEditorDocForSave(normalized)
-        onChange(prepared)
+        onChangeRef.current(prepared)
       },
       immediatelyRender: false
     },
-    [className, handleImagePaste, onChange, placeholder, hydratedInitialValue]
+    []
   )
 
   useEffect(() => {
@@ -239,7 +249,12 @@ export function RichTextArea({
     const hydratedValue = hydrateEditorDoc(value)
     const next = JSON.stringify(hydratedValue)
     if (current !== next) {
+      isUpdatingFromPropRef.current = true
       editor.commands.setContent(hydratedValue)
+      // Reset the flag after a microtask to ensure onUpdate has been called
+      queueMicrotask(() => {
+        isUpdatingFromPropRef.current = false
+      })
     }
   }, [editor, value])
 

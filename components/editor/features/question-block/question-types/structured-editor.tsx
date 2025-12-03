@@ -2,6 +2,7 @@
 <ai_context>
 Structured question editor component.
 Renders sub-parts (a, b, c...) with individual marks and answer lines.
+Styled to feel native like document sub-items - no borders or heavy styling.
 </ai_context>
 */
 
@@ -10,8 +11,7 @@ Renders sub-parts (a, b, c...) with individual marks and answer lines.
 import { useCallback } from "react"
 import { Plus, X } from "lucide-react"
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { cn } from "@/lib/utils"
 import { RichTextArea } from "../ui/rich-text-area"
 import { createSimpleDoc } from "@/lib/editor"
 
@@ -25,7 +25,13 @@ interface PartEditorProps {
   paperId?: number
 }
 
-function PartEditor({ part, onUpdate, onDelete, canDelete, paperId }: PartEditorProps) {
+function PartEditor({
+  part,
+  onUpdate,
+  onDelete,
+  canDelete,
+  paperId
+}: PartEditorProps) {
   const handleContentChange = useCallback(
     (doc: QuestionBlockPart["content"]) => {
       onUpdate({
@@ -37,45 +43,48 @@ function PartEditor({ part, onUpdate, onDelete, canDelete, paperId }: PartEditor
   )
 
   const handleMarksChange = useCallback(
-    (marks: number) => {
+    (value: string) => {
+      const marks = parseInt(value) || 1
       onUpdate({ ...part, marks })
     },
     [part, onUpdate]
   )
 
   return (
-    <div className="flex items-start gap-2 group border-l-2 border-muted pl-3 py-1">
-      <div className="flex h-5 w-5 shrink-0 items-center justify-center text-xs font-medium text-muted-foreground">
+    <div className="group/part flex items-start gap-2">
+      <span className="shrink-0 select-none text-muted-foreground">
         ({part.label})
-      </div>
-      <div className="flex-1 space-y-1">
+      </span>
+      <div className="flex-1 min-w-0">
         <RichTextArea
           value={part.content}
           onChange={handleContentChange}
           placeholder={`Part ${part.label}...`}
-          className="text-sm"
           paperId={paperId}
         />
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <Input
-            type="number"
-            min={0}
-            value={part.marks || 1}
-            onChange={e => handleMarksChange(parseInt(e.target.value) || 1)}
-            className="h-5 w-12 text-xs px-1"
-          />
-          <span>marks</span>
-        </div>
       </div>
+      {/* Marks indicator - inline with part */}
+      <span className="shrink-0 text-xs text-muted-foreground self-start pt-1">
+        [
+        <input
+          type="number"
+          min={0}
+          value={part.marks || 1}
+          onChange={e => handleMarksChange(e.target.value)}
+          className="w-6 bg-transparent text-center focus:outline-none"
+        />
+        ]
+      </span>
       {canDelete && (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-5 w-5 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+        <button
+          className={cn(
+            "shrink-0 p-1 rounded text-muted-foreground hover:text-destructive",
+            "opacity-0 group-hover/part:opacity-100 transition-opacity"
+          )}
           onClick={onDelete}
         >
-          <X className="h-3 w-3" />
-        </Button>
+          <X className="h-3.5 w-3.5" />
+        </button>
       )}
     </div>
   )
@@ -87,7 +96,11 @@ interface StructuredEditorProps {
   paperId?: number
 }
 
-export function StructuredEditor({ parts, onPartsChange, paperId }: StructuredEditorProps) {
+export function StructuredEditor({
+  parts,
+  onPartsChange,
+  paperId
+}: StructuredEditorProps) {
   const handlePartUpdate = useCallback(
     (index: number, updated: QuestionBlockPart) => {
       const newParts = [...parts]
@@ -125,7 +138,7 @@ export function StructuredEditor({ parts, onPartsChange, paperId }: StructuredEd
   }, [parts, onPartsChange])
 
   return (
-    <div className="space-y-2 pl-4">
+    <div className="space-y-1 ml-5">
       {parts.map((part, index) => (
         <PartEditor
           key={part.id}
@@ -136,15 +149,13 @@ export function StructuredEditor({ parts, onPartsChange, paperId }: StructuredEd
           paperId={paperId}
         />
       ))}
-      <Button
-        variant="ghost"
-        size="sm"
-        className="h-6 text-xs"
+      <button
+        className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 py-1"
         onClick={handleAddPart}
       >
-        <Plus className="h-3 w-3 mr-1" />
+        <Plus className="h-3 w-3" />
         Add part
-      </Button>
+      </button>
     </div>
   )
 }

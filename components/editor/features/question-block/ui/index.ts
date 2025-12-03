@@ -6,5 +6,4 @@ Exports shared UI components for question blocks.
 
 export { RichTextArea } from "./rich-text-area"
 export { AnswerSpace } from "./answer-space"
-export { BlockHeader } from "./block-header"
 
